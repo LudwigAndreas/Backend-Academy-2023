@@ -1,0 +1,30 @@
+{
+  "type": "record",
+  "name": "Person",
+  "fields": [
+    {
+      "name": "id",
+      "type": "long"
+    },
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "about_me",
+      "type": "string"
+    },
+    {
+      "name": "birthdate",
+      "type": "string",
+      "logicalType": "date"
+    },
+    {
+      "name": "children",
+      "type": {
+        "type": "array",
+        "items": "Person"
+      }
+    }
+  ]
+}

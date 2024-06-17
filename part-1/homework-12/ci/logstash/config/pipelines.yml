@@ -1,0 +1,4 @@
+- pipeline.id: logstash-logs
+  path.config: "pipeline/logstash-logs.conf"
+- pipeline.id: logstash
+  path.config: "pipeline/logstash.conf"

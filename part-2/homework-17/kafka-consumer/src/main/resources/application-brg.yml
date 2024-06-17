@@ -1,0 +1,16 @@
+spring:
+  kafka:
+    consumer:
+      group-id: "kafka-test-1"
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: '*'
+      enable-auto-commit: true
+      max-poll-records: 1
+
+kafka:
+  topic: batch-reading-garant

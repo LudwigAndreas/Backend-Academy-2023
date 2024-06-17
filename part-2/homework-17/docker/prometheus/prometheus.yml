@@ -1,0 +1,52 @@
+global:
+  scrape_timeout: 10s
+  scrape_interval: 15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: [ ]
+      scheme: http
+      timeout: 10s
+      api_version: v1
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: [ 'localhost:9090' ]
+
+  - job_name: 'kafka'
+    static_configs:
+      - targets:
+          - 'kafka:1234'
+        labels:
+          env: 'dev'
+
+  - job_name: 'zookeeper'
+    static_configs:
+      - targets:
+          - 'zookeeper:1234'
+        labels:
+          env: 'dev'
+
+  - job_name: 'kafka-lag-exporter'
+    static_configs:
+      - targets:
+          - 'kafka-lag-exporter:9999'
+        labels:
+          env: 'dev'
+
+  - job_name: 'producer'
+    static_configs:
+      - targets:
+          - 'producer:1234'
+        labels:
+          env: 'dev'
+
+  - job_name: 'consumer'
+    static_configs:
+      - targets:
+          - "consumer:1234"
+        labels:
+          env: 'dev'

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.hw5.homework.seminar.ru/springsoap/gen"
+           targetNamespace="http://www.hw5.homework.seminar.ru/springsoap/gen" elementFormDefault="qualified">
+
+    <xs:element name="addTaskRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="task" type="tns:Task"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="addTaskResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="task" type="tns:Task"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTaskRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="taskId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTaskResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="task" type="tns:Task"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTasksRequest">
+        <xs:complexType/>
+    </xs:element>
+
+    <xs:element name="getTasksResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="taskStatus" type="tns:TaskStatus"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="patchTaskByIdRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="taskId" type="xs:string"/>
+                <xs:element name="newStatus" type="tns:TaskEnum"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="patchTaskByIdResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="task" type="tns:Task"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="deleteTaskRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="taskId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="deleteTaskResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTaskAverageTimesRequest">
+        <xs:complexType/>
+    </xs:element>
+
+    <xs:element name="getTaskAverageTimesResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="taskTime" type="tns:TaskTime"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTaskTimesRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="taskId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTaskTimesResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="taskTime" type="tns:TaskTime"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTaskStatusTimesRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="taskId" type="xs:string"/>
+                <xs:element name="status" type="tns:TaskEnum"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTaskStatusTimesResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="time" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTaskStatusAverageTimesRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="tns:TaskEnum"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTaskStatusAverageTimesResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="averageTime" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="Task">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="status" type="tns:TaskEnum"/>
+            <xs:element name="times" type="tns:TaskTime"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:simpleType name="TaskEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="NEW"/>
+            <xs:enumeration value="WAITING"/>
+            <xs:enumeration value="PROCESSED"/>
+            <xs:enumeration value="CLOSE"/>
+            <xs:enumeration value="CANCEL"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="TaskStatus">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="NEW"/>
+            <xs:enumeration value="WAITING"/>
+            <xs:enumeration value="PROCESSED"/>
+            <xs:enumeration value="CLOSE"/>
+            <xs:enumeration value="CANCEL"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="TaskTime">
+        <xs:sequence>
+            <xs:element name="NEW" type="xs:string"/>
+            <xs:element name="WAITING" type="xs:string"/>
+            <xs:element name="PROCESSED" type="xs:string"/>
+            <xs:element name="CLOSE" type="xs:string"/>
+            <xs:element name="CANCEL" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

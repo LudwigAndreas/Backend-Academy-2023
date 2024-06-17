@@ -1,0 +1,50 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  application:
+    name: accounting
+
+  jackson:
+    default-property-inclusion: NON_NULL
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+  output:
+    ansi:
+      enabled: ALWAYS
+
+springdoc:
+  show-actuator: false
+  api-docs:
+    enabled: false
+  swagger-ui:
+    url: /openapi/accounting.yaml
+    path: /swagger-ui
+
+
+
+logging:
+  level:
+    root: WARN
+    ru: DEBUG
+    org:
+      springframework:
+        web:
+          client:
+            RestTemplate: DEBUG
+        security:
+          web: DEBUG
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: INFO
+    com: INFO

@@ -1,0 +1,531 @@
+openapi: 3.0.3
+info:
+  title: Electronic queuing project - OpenAPI 3.0
+  description: |-
+    Electronic queuing project
+
+    _If you're looking for the Swagger 2.0/OAS 2.0 version of Petstore, then click [here](https://editor.swagger.io/?url=https://petstore.swagger.io/v2/swagger.yaml). Alternatively, you can load via the `Edit > Load Petstore OAS 2.0` menu option!_
+    
+    Some useful links:
+    - [The Pet Store repository](https://github.com/swagger-api/swagger-petstore)
+    - [The source API definition for the Pet Store](https://github.com/swagger-api/swagger-petstore/blob/master/src/main/resources/openapi.yaml)
+#  termsOfService: http://swagger.io/terms/
+  contact:
+    email: ev.sand.raw@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
+  version: 0.0.1
+externalDocs:
+  description: Github page
+  url: https://github.com/central-university-dev/2023-itis-homework-6-LudwigAndreas
+servers:
+  - url: http://127.0.0.1:8080/api/v1
+tags:
+  - name: task
+    description: Information about the task and its status
+    # externalDocs:
+    #   description: Find out more about our store
+    #   url: http://swagger.io
+  - name: times
+    description: Task completion statistics
+    # externalDocs:
+    #   description: Find out more about our store
+    #   url: http://swagger.io
+#  - name: user
+#    description: Operations about user
+paths:
+  /task:
+    post:
+      tags:
+        - task
+      summary: Add a new task to the query
+      description: Add a new task to the query
+      operationId: addTask
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '409':
+          description: Task with this ID already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+        # security:
+        # - petstore_auth:
+        #     - write:pets
+        #     - read:pets
+    get:
+      tags:
+        - task
+      summary: Get next task from query
+      description: Get next task from query
+      operationId: getTask
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: No tasks in query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+        # security:
+        # - petstore_auth:
+        #     - write:pets
+        #     - read:pets
+  /tasks:
+    get:
+      tags:
+        - task
+      summary: Information about all existing tasks (except completed tasks)
+      description: Get task statusing
+      operationId: getTasks
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatus'
+        '404':
+            description: No tasks in query
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ApiErrorInfo'
+        # security:
+        # - petstore_auth:
+        #     - write:pets
+        #     - read:pets
+  /task/{taskId}:
+    get:
+      tags:
+        - task
+      summary: Find task by ID
+      description: Returns a single task
+      operationId: getTaskById
+      parameters:
+        - name: taskId
+          in: path
+          description: ID of task to return
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z0-9]+$'
+            maxLength: 6
+            description: Unique identifier for the task (capital letters and digits only)
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/ApiErrorInfo'
+      # security:
+      #   - api_key: []
+      #   - petstore_auth:
+      #       - write:pets
+      #       - read:pets
+    patch:
+      tags:
+        - task
+      summary: Update task status
+      description: Updated task status to next status
+      operationId: patchTaskById
+      parameters:
+        - name: taskId
+          in: path
+          description: ID of task to return
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z0-9]+$'
+            maxLength: 6
+            description: Unique identifier for the task (capital letters and digits only)
+      requestBody:
+        description: New task status
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                 $ref: '#/components/schemas/TaskEnum'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid ID supplieds
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+        '409':
+          description: Status Conflict. Unable to change task status to given
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+      # security:
+      #   - api_key: []
+      #   - petstore_auth:
+      #       - write:pets
+      #       - read:pets
+    delete:
+      tags:
+        - task
+      summary: Deletes a task
+      description: delete a task
+      operationId: deleteTask
+      parameters:
+        # - name: api_key
+        #   in: header
+        #   description: ''
+        #   required: false
+        #   schema:
+        #     type: string
+        - name: taskId
+          in: path
+          description: Task id to delete
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z0-9]+$'
+            maxLength: 6
+            description: Unique identifier for the task (capital letters and digits only)
+      responses:
+        '400':
+          description: Invalid task ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+        '404':
+            description: Task not found
+            content:
+              application/json:
+                schema:
+                    $ref: '#/components/schemas/ApiErrorInfo'
+      # security:
+      #   - petstore_auth:
+      #       - write:pets
+      #       - read:pets
+  /times:
+    get:
+      tags:
+        - times
+      summary: Get average time of tasks completion
+      description: Returns time statistics for tasks
+      operationId: getTaskAverageTimes
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTime'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaskTime'
+      # security:
+      #   - api_key: []
+      #   - petstore_auth:
+      #       - write:pets
+      #       - read:pets
+  /times/{taskId}:
+    get:
+      tags:
+        - times
+      summary: Get task's time statistics
+      description: Manager can see the processing time by task
+      operationId: getTaskTimes
+      parameters:
+        - name: taskId
+          in: path
+          description: ID of task to return
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z0-9]+$'
+            maxLength: 6
+            description: Unique identifier for the task (capital letters and digits only)
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTime'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaskTime'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+  /times/{taskId}/{status}:
+    get:
+      tags:
+        - times
+      summary: Get processing time by task id and status
+      description: Manager can view processing time by task status
+      operationId: getTaskStatusTimes
+      parameters:
+        - name: taskId
+          in: path
+          description: ID of task to return
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z0-9]+$'
+            maxLength: 6
+            description: Unique identifier for the task (capital letters and digits only)
+        - name: status
+          in: path
+          description: Status whose processing time you need
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskEnum'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  time:
+                    type: string
+                    format: date-time
+                    example: "00:15:30"
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorInfo'
+      # security:
+      #   - api_key: []
+      #   - petstore_auth:
+      #       - write:pets
+      #       - read:pets
+  /times/{status}:
+    get:
+      tags:
+        - times
+      summary: Get average processing time by status
+      description: Manager can see average processing time by statuses
+      operationId: getTaskStatusAverageTimes
+      parameters:
+        - name: status
+          in: path
+          description: Status whose processing time you need
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskEnum'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  averageTime:
+                    type: string
+                    format: date-time
+                    example: "00:15:30"
+        '400':
+          description: Invalid status supplied
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/ApiErrorInfo'
+      # security:
+      #   - api_key: []
+      #   - petstore_auth:
+      #       - write:pets
+      #       - read:pets
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Z0-9]+$'
+          maxLength: 6
+          description: Unique identifier for the task (capital letters and digits only)
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/TaskEnum'
+        times:
+          $ref: '#/components/schemas/TaskTime'
+    TaskEnum:
+      type: string
+      description: Current status of the task
+      example: PROCESSING
+      enum:
+        - NEW
+        - WAITING
+        - PROCESSED
+        - CLOSE
+        - CANCEL
+    TaskStatus:
+      type: object
+      description: Status tasks
+      additionalProperties:
+        type: array
+        items:
+          type: string
+          pattern: '^[A-Z0-9]+$'
+          maxLength: 6
+          description: Unique identifier for the task (capital letters and digits only)
+      example:
+        NEW: []
+        WAITING: ["ABC123", "DFG456"]
+        PROCESSED: ["HJK789"]
+    TaskTime:
+      type: object
+      description: Status tasks
+      additionalProperties:
+        type: string
+        format: date-time
+      example:
+        NEW: "00:00:30"
+        WAITING: "00:05:30"
+        PROCESSED: "00:15:18"
+        CLOSE: "00:00:00"
+        CANCEL: "00:00:00"
+    ApiErrorInfo:
+      type: object
+      description: Error information
+      properties:
+        status:
+          type: integer
+          format: int32
+          example: 400
+        timestamp:
+          type: string
+          format: date-time
+          example: '10-10-2021 10:10:10'
+        message:
+          type: string
+          example: Malformed JSON request
+        path:
+          type: string
+          example: /task/ABC123
+        debugMessage:
+          type: string
+          example: "Validation failed for object='task'. Error count: 1"
+        subErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiValidationError'
+    ApiValidationError:
+      type: object
+      description: Validation error information
+      properties:
+        object:
+          type: string
+          example: task
+        field:
+          type: string
+          example: id
+        rejectedValue:
+          type: string
+          example: ABC123
+        message:
+          type: string
+          example: Invalid ID supplied for task ABC123. Valid ID must be 6 characters long and contain only capital letters and digits
+    # User:
+    #   type: object
+    #   properties:
+    #     id:
+    #       type: integer
+    #       format: int64
+    #       example: 10
+    #     username:
+    #       type: string
+    #       example: theUser
+    #     password:
+    #       type: string
+    #       example: '12345'
+    #     userStatus:
+    #       type: integer
+    #       description: User Status
+    #       format: int32
+    #       example: 1
+    # ApiResponse:
+    #   type: object
+    #   properties:
+    #     code:
+    #       type: integer
+    #       format: int32
+    #     type:
+    #       type: string
+    #     message:
+    #       type: string
+    #   xml:
+    #     name: '##default'
+  # securitySchemes:
+  #   petstore_auth:
+  #     type: oauth2
+  #     flows:
+  #       implicit:
+  #         authorizationUrl: https://localhost/oauth/authorize
+  #         scopes:
+  #           write:pets: modify pets in your account
+  #           read:pets: read your pets
+  #   api_key:
+  #     type: apiKey
+  #     name: api_key
+  #     in: header

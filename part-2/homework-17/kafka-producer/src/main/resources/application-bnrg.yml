@@ -1,0 +1,26 @@
+spring:
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring:
+          json:
+            add:
+              type:
+                headers: false
+        acks: 0
+        batch-size: 32768
+        linger-ms: 20
+        retries: 0
+        enable-idempotence: false
+        max-in-flight-requests-per-connection: 5
+#      compression-type: snappy
+
+
+
+
+kafka:
+  topic: batch-no-reading-garant
+  partitions: 1
+  replication-factor: 1

@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+
+  mongo_db:
+    image: mongo:5.0.2
+    container_name: topics_mongo_db
+    restart: unless-stopped
+    environment:
+      MONOG_INITDB_DATABASE: topics
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - "7017:27017"
+    volumes:
+      - ./ci/mongo/data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  redis:
+    image: redis:6.2.5
+    container_name: topics_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./ci/redis/data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+#  app:
+#    depends_on:
+#      mongo_db:
+#        condition: service_healthy
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    restart: on-failure
+#    container_name: topics_app
+#    environment:
+#        - SPRING_DATA_MONGODB_URI=mongodb://root:root@mongo_db:27017/topics
+#    ports:
+#      - "8080:8080"
+#    volumes:
+#      - .m2:/root/.m2
+#    tty: true
+#    stdin_open: true
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 5s

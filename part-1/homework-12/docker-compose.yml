@@ -1,0 +1,95 @@
+version: '3.7'
+
+services:
+  db:
+    image: postgres:14.0
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: "site"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PG_DATA: /var/lib/postgresql/data/pg_data
+    volumes:
+      - ./ci/postgres/data:/var/lib/postgresql/data
+      - ./ci/postgres/schema:/docker-entrypoint-initdb.d
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.14
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment:
+      node.name: elasticsearch
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      discovery.type: single-node
+
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+    volumes:
+      - ./ci/elasticsearch/data:/usr/share/elasticsearch/data
+      - ./ci/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    networks:
+      - elk
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.14
+    container_name: logstash
+    hostname: logstash
+    # user: root
+    restart: unless-stopped
+    volumes:
+      - ./ci/logstash/config:/usr/share/logstash/config
+      - ./ci/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./ci/logstash/patterns:/usr/share/logstash/patterns
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+    # command: logstash -f /usr/share/logstash/pipeline/logstash.conf
+    command: logstash --config.reload.automatic
+    ports:
+      - "5044:5044"
+      - "5145:5145/udp"
+      - "5015:5015"
+      - "9996:9996"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.14
+    container_name: kibana
+    hostname: kibana
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+    volumes:
+      - ./ci/kibana/kibana.yml:/urs/share/kibana/config/kibana.yml
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+
+volumes:
+    pg_data:
+    elasticsearch:
+    logstash:
+    kibana:
+
+networks:
+    elk:
+        driver: bridge

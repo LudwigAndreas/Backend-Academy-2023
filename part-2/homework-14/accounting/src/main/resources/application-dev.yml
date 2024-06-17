@@ -1,0 +1,49 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: user-rest-api
+            scope: openid, profile, email
+            authorization-grant-type: password
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8282/realms/tinkoff-course
+            user-name-attribute: preferred_username
+      resourceserver:
+        jwt:
+          jwk-set-uri: '${spring.security.oauth2.client.provider.keycloak.issuer-uri}/protocol/openid-connect/certs'
+          issuer-uri: '${spring.security.oauth2.client.provider.keycloak.issuer-uri}'
+  jackson:
+    default-property-inclusion: ALWAYS
+  datasource:
+    url: jdbc:postgresql://localhost:1234/accounting
+    username: compose-postgres
+    password: compose-postgres
+
+keycloak:
+  auth-server-url: http://localhost:8282
+  realm: tinkoff-course
+  credentials:
+    username: user-service-admin
+    password: user-service-admin
+
+logging:
+  level:
+    root: WARN
+    ru: TRACE
+    org:
+      springframework:
+        web:
+          client:
+            RestTemplate: DEBUG
+        security:
+          web: DEBUG
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+    com: INFO

@@ -1,0 +1,187 @@
+version: '3.1'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.4
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.17.2.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+    volumes:
+      - ./jmx_exporter:/usr/share/jmx_exporter/
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "2181" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  kafka:
+    image: confluentinc/cp-kafka:6.2.4
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_SCHEMA_REGISTRY_URL: schemaregistry:8085
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_JMX_OPTS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.17.2.jar=1234:/usr/share/jmx_exporter/kafka-broker.yml -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+    volumes:
+      - ./jmx_exporter:/usr/share/jmx_exporter/
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "9092" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:6.2.4
+    restart: always
+    depends_on:
+      - kafka
+    ports:
+      - "8085:8085"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: "zookeeper:2181"
+      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8085"
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka:9092"
+      SCHEMA_REGISTRY_DEBUG: "true"
+    healthcheck:
+      test: [ "CMD", "curl", "--output", "/dev/null", "--silent", "--head", "--fail", "http://schema-registry:8081/subjects" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: kafka-ui
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: true
+
+  postgres:
+    image: postgres:14.7-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_USER: dbuser
+      POSTGRES_DB: testdb
+    volumes:
+      - ./docker/postgres/initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4:7
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    healthcheck:
+      test: [ "CMD", "wget", "-O", "-", "http://localhost:80/misc/ping" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  producer:
+    build: ./kafka-producer
+    container_name: producer
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      JAVA_OPTS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.17.2.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml -Xmx256M -Xms256M"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_PROFILES_ACTIVE: brg
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/testdb
+      SPRING_DATASOURCE_USERNAME: dbuser
+      SPRING_DATASOURCE_PASSWORD: example
+    volumes:
+      - ./jmx_exporter:/usr/share/jmx_exporter/
+    healthcheck:
+      test: "curl --fail --silent localhost:8081/actuator/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  consumer:
+    build: ./kafka-consumer
+    container_name: consumer
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      JAVA_OPTS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.17.2.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml -Xmx256M -Xms256M"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_PROFILES_ACTIVE: brg
+    volumes:
+      - ./jmx_exporter:/usr/share/jmx_exporter/
+    healthcheck:
+      test: "curl --fail --silent localhost:8081/actuator/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  kafka-lag-exporter:
+    image: lightbend/kafka-lag-exporter:0.5.5
+    hostname: kafka-lag-exporter
+    restart: always
+    ports:
+      - 9999:9999
+    volumes:
+      - ./docker/kafka-lag-exporter/:/opt/docker/conf/
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ./docker/prometheus:/etc/prometheus
+    healthcheck:
+      test: [ "CMD", "wget", "http://localhost:9090" ]
+      interval: 10s
+      timeout: 15s
+      retries: 10
+
+  grafana:
+    image: grafana/grafana:10.4.3
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - ./docker/grafana/provisioning/:/etc/grafana/provisioning/
+    healthcheck:
+      test: [ "CMD", "wget", "-O", "-", "http://localhost:3000/api/health" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5

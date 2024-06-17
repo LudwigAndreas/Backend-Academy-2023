@@ -1,0 +1,50 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: user-rest-api
+            scope: openid, profile, email
+            authorization-grant-type: password
+        provider:
+          keycloak:
+            issuer-uri: ${SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_AUTH_SERVER}/realms/tinkoff-course
+            user-name-attribute: preferred_username
+      resourceserver:
+        jwt:
+          jwk-set-uri: '${spring.security.oauth2.client.provider.keycloak.issuer-uri}/protocol/openid-connect/certs'
+          issuer-uri: '${spring.security.oauth2.client.provider.keycloak.issuer-uri}'
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+keycloak:
+  auth-server-url: ${SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_AUTH_SERVER}
+  realm: tinkoff-course
+  credentials:
+    username: user-service-admin
+    password: user-service-admin
+
+logging:
+  level:
+    root: WARN
+    ru: INFO
+    org:
+      springframework:
+        web:
+          client:
+            RestTemplate: DEBUG
+        security:
+          web: DEBUG
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: INFO
+    com: INFO

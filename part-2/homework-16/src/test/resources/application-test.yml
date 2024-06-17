@@ -1,0 +1,4 @@
+test:
+  container:
+    mongo:
+      version: 5.0.2

@@ -1,0 +1,31 @@
+{
+  "$id": "https://example.com/person.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "description": "The person's id."
+    },
+    "name": {
+      "type": "string",
+      "description": "The person's name."
+    },
+    "aboutMe": {
+      "type": "string",
+      "description": "The person's about me."
+    },
+    "birthDate": {
+      "type": "string",
+      "format": "date",
+      "description": "The person's birth date."
+    },
+    "children": {
+      "type": "array",
+      "items": {
+        "$ref": "#"
+      }
+    }
+  }
+}

@@ -1,0 +1,471 @@
+openapi: 3.0.2
+info:
+  title: Tinkoff seminars User API
+  description: "This is the user API for the Tinkoff seminars. It allows you to create, read, update and delete users. It also allows you to get a user by ID."
+  termsOfService: https://swagger.io/terms/
+  contact:
+    email: ev.sand.raw@gmail.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.1-SNAPSHOT
+externalDocs:
+  description: Find out more about Reflectoring
+  url: https://reflectoring.io/about/
+servers:
+  - url: https://localhost:8080/api/
+    description: Development server
+
+paths:
+  /users/me:
+    get:
+      operationId: getCurrentUser
+      summary: Returns the current user.
+      security:
+          - oAuth2: [ read ]
+      responses:
+        '200':
+          description: Successful response.
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/User'
+        '404':
+          description: User was not found.
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ApiError'
+  /users:
+    post:
+      operationId: createUser
+      summary: Creates a user.
+      #      security:
+      #        - oAuth2: [write]
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistrationRequest'
+      responses:
+        '201':
+          description: User created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+        '409':
+          description: User already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /users/{userId}:
+    get:
+      operationId: getUserById
+      summary: Returns a user based on a single ID.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Identifier of the user.
+          schema:
+            type: string
+            format: uuid
+      security:
+        - oAuth2: [ read ]
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    patch:
+      operationId: patchUser
+      summary: Updates a user.
+      description:  This method supports patch semantics. Note that each patch request consumes three quota units; prefer using a get followed by an update. The field values you specify replace the existing values. Fields that you don't specify in the request remain unchanged. Array fields, if specified, overwrite the existing arrays; this discards any previous array elements.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Identifier of the user.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/PatchRequest'
+                - $ref: '#/components/schemas/User'
+      security:
+        - oAuth2: [ write ]
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: User was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    put:
+      operationId: updateUser
+      summary: Updates a user.
+      description:  This method does not support patch semantics and always updates the entire event resource. To do a partial update, perform a get followed by an update.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Identifier of the user.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      security:
+        - oAuth2: [ write ]
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: User was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    delete:
+      operationId: deleteUser
+      summary: Deletes a user.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Identifier of the user.
+          schema:
+            type: string
+            format: uuid
+      security:
+        - oAuth2: [ write ]
+      responses:
+        '204':
+          description: Successful response.
+        '403':
+          description: Forbidden operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: User was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /users/verification-link/{userId}:
+    get:
+      operationId: getVerificationLink
+      summary: Returns a verification link for a user based on a single ID.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Identifier of the user.
+          schema:
+            type: string
+            format: uuid
+      security:
+        - oAuth2: [ read ]
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uri
+        '404':
+          description: User was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /users/reset-password/{userId}:
+    get:
+      operationId: getResetPasswordLink
+      summary: Returns a reset password link for a user based on a single ID.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Identifier of the user.
+          schema:
+            type: string
+            format: uuid
+      security:
+        - oAuth2: [ read ]
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uri
+        '404':
+          description: User was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of the user. It is a unique identifier in UUID format.
+          format: uuid
+          readOnly: true
+        firstName:
+          type: string
+          description: First name of the user.
+          maxLength: 40
+        lastName:
+          type: string
+          description: Last name of the user.
+          maxLength: 45
+        middleName:
+          type: string
+          description: Middle name of the user.
+          maxLength: 40
+        email:
+          type: string
+          description: Email of the user.
+          format: email
+          minLength: 5
+          maxLength: 255
+        phone:
+          type: string
+          description: Phone of the user.
+          minimum: 10
+          maxLength: 20
+          example: +7 (999) 999-99-99
+        login:
+          type: string
+          description: Login of the user.
+          minLength: 5
+          maxLength: 30
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth of the user.
+          example: 1990-01-01
+        about:
+          type: string
+          description: About the user.
+          maxLength: 255
+        skills:
+          type: array
+          items:
+            type: string
+          description: Skills of the user.
+#        roles:
+#          type: array
+#          items:
+#            type: string
+#          description: Roles of the user.
+    UserRegistrationRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of the user. It is a unique identifier in UUID format.
+          format: uuid
+          readOnly: true
+        firstName:
+          type: string
+          description: First name of the user.
+          maxLength: 40
+        lastName:
+          type: string
+          description: Last name of the user.
+          maxLength: 45
+        middleName:
+          type: string
+          description: Middle name of the user.
+          maxLength: 40
+        email:
+          type: string
+          description: Email of the user.
+          format: email
+          minLength: 5
+          maxLength: 255
+        phone:
+          type: string
+          description: Phone of the user.
+          minimum: 10
+          maxLength: 20
+          example: +7 (999) 999-99-99
+        login:
+          type: string
+          description: Login of the user.
+          minLength: 5
+          maxLength: 30
+        password:
+          type: string
+          description: Password of the user.
+          minLength: 8
+          maxLength: 255
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth of the user.
+          example: 1990-01-01
+        about:
+          type: string
+          description: About the user.
+          maxLength: 255
+        skills:
+          type: array
+          items:
+            type: string
+          description: Skills of the user.
+    ApiError:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+          readOnly: true
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+        path:
+          type: string
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+        debugMessage:
+          type: string
+          readOnly: true
+        subErrors:
+          type: array
+          readOnly: true
+          items:
+            type: object
+            readOnly: true
+            properties:
+              objectName:
+                type: string
+                readOnly: true
+              field:
+                type: string
+                readOnly: true
+              rejectedValue:
+                type: string
+                readOnly: true
+              message:
+                type: string
+                readOnly: true
+    PatchRequest:
+      type: array
+      readOnly: true
+      items:
+        $ref: '#/components/schemas/JsonPatchDocument'
+    JsonPatchDocument:
+      description: A JSONPatch document as defined by RFC 6902
+      readOnly: true
+      required:
+        - "op"
+        - "path"
+      properties:
+        op:
+          type: string
+          description: The operation to be performed
+          enum:
+            - "add"
+            - "remove"
+            - "replace"
+            - "move"
+            - "copy"
+            - "test"
+        path:
+          type: string
+          description: A JSON-Pointer
+        value:
+          type: object
+          description: The value to be used within the operations.
+        from:
+          type: string
+          description: A string containing a JSON Pointer value.
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      description: OAuth2 authorization code flow
+      flows:
+        implicit:
+          authorizationUrl: http://localhost:8282/realms/tinkoff-course/protocol/openid-connect/auth
+          scopes:
+            read: Grants read access
+            write: Grants write access

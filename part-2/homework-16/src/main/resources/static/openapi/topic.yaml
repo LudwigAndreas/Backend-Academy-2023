@@ -1,0 +1,811 @@
+openapi: 3.0.0
+info:
+  title: Forum topics Microservices API
+  description: API documentation for the forum microservices application
+  version: 0.0.1
+  termsOfService: http://api.example.com/terms/
+  contact:
+    name: API Support
+    url: http://www.example.com/support
+    email: ev.sand.raw@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: http://api.example.com/v1
+paths:
+  /topics:
+    get:
+      summary: Get all topics on the site
+      #TODO:      description: This method allow
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: The page number
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: The number of items per page
+      #TODO:        - fromdate, todate, order, min, max, sort, tagged
+      responses:
+        '200':
+          description: A list of topics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TopicResponse'
+    post:
+      summary: Create a new topic
+      description: Use an access_token with write_access to create a new topic.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopicCreate'
+      #TODO:      parameters:
+      #        - name: access_token
+      #          in: header
+      #          required: true
+      #          schema:
+      #            type: string
+      #          description: Access token with write access
+      #        - name: key
+      #          in: query
+      #          required: true
+      #          schema:
+      #            type: string
+      #          description: API key
+      #        - name: preview
+      #          in: query
+      #          required: false
+      #          schema:
+      #              type: boolean
+      #          description: Preview the topic
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad request
+  /topics/{topicId}:
+    get:
+      summary: Get a topic by ID
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to get
+      #TODO:        - page, pageSize, fromdate, todate, order, min, max, sort, ids
+      responses:
+        '200':
+          description: A topic object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicResponse'
+        '404':
+          description: Topic not found
+    put:
+      summary: Edit an existing topic.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to update
+      #TODO:        - preview [may move title, body, tags to query params]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopicResponse'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicResponse'
+        '404':
+          description: Topic not found
+    delete:
+      summary: Deletes a topic.
+      description: |-
+        Note that only topic owners can delete their topics. 
+        Use an access_token with write_access to delete a topic.
+        It is not possible to undelete a topic via the API.
+        This method will never return an object.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to delete
+      #TODO:        - access_token, key, preview
+      responses:
+        '204':
+          description: No content
+        '404':
+          description: Topic not found
+  /topics/{topicId}/like:
+    post:
+      summary: Likes a topic.
+      description: |-
+        Use an access_token with write_access to like a topic.
+        This method returns the liked topic.
+        To unlike a topic, use the DELETE method.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to like
+      #TODO:        - access_token, key, preview
+      responses:
+        '200':
+          description: Topic liked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicResponse'
+        '404':
+          description: Topic not found
+    delete:
+      summary: Unlikes a topic.
+      description: |-
+        Use an access_token with write_access to unlike a topic.
+        This method returns the unliked topic.
+        To dislike a topic, use the /topics/{topicId}/dislike method.
+      parameters:
+        - name: topicId
+          description: ID of the topic to unlike
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Topic unliked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicResponse'
+        '404':
+          description: Topic not found
+  /topics/{topicId}/dislike:
+    post:
+      summary: Dislikes a topic.
+      description: |-
+        Use an access_token with write_access to dislike a topic.
+        This method returns the disliked topic.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to dislike
+      #TODO:        - access_token, key, preview
+      responses:
+        '200':
+          description: Topic disliked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicResponse'
+        '404':
+          description: Topic not found
+    delete:
+      summary: Undislikes a topic.
+      description: |-
+        Use an access_token with write_access to undislike a topic.
+        This method returns the undisliked topic.
+        To like a topic, use the /topics/{topicId}/like method.
+      parameters:
+        - name: topicId
+          description: ID of the topic to undislike
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Topic undisliked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicResponse'
+        '404':
+          description: Topic not found
+  /topics/{topicId}/messages:
+    get:
+      summary: Gets the messages to a topic identified by the topicId.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to get messages for
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: The page number
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: The number of items per page
+      responses:
+        '200':
+          description: A list of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Topic not found
+    post:
+      summary: Creates a new message to a given topic.
+      description: Use an access_token with write_access to create a new message.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to create a message for
+      #TODO:        - access_token, key, preview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Bad request
+  /topics/{topicId}/messages/{messageId}:
+    get:
+      summary: Gets a message by ID.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to get the message for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to get
+      responses:
+        '200':
+          description: A message object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Message not found
+    put:
+      summary: Edits an existing message.
+      description: Use an access_token with write_access to edit a message.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to update the message for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to update
+      #TODO:        - key, access_token, preview
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Message not found
+    delete:
+      summary: Deletes a message.
+      description: |-
+        Note that only message owners can delete their messages. 
+        Use an access_token with write_access to delete a message.
+        It is not possible to undelete a message via the API.
+        This method will never return an object.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to delete the message for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to delete
+      #TODO:        - access_token, key
+      responses:
+        '204':
+          description: No content
+        '404':
+          description: Message not found
+  /topic/{topicId}/messages/{messageId}/like:
+    post:
+      summary: Likes a message.
+      description: |-
+        Use an access_token with write_access to like a message.
+        This method returns the liked message.
+        To unlike a message, use the DELETE method.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to like the message for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to like
+      #TODO:        - access_token, key, preview
+      responses:
+        '200':
+          description: Message liked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Message not found
+    delete:
+      summary: Unlikes a message.
+      description: |-
+        Use an access_token with write_access to unlike a message.
+        This method returns the unliked message.
+        To dislike a message, use the /topic/{topicId}/messages/{messageId}/dislike method.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to unlike the message for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to unlike
+      #TODO:        - access_token, key
+      responses:
+        '200':
+          description: Message unliked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Message not found
+  /topic/{topicId}/messages/{messageId}/dislike:
+    post:
+      summary: Dislikes a message.
+      description: |-
+        Use an access_token with write_access to dislike a message.
+        This method returns the disliked message.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to dislike the message for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to dislike
+      #TODO:        - access_token, key, preview
+      responses:
+        '200':
+          description: Message disliked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Message not found
+    delete:
+      summary: Undislikes a message.
+      description: |-
+        Use an access_token with write_access to undislike a message.
+        This method returns the undisliked message.
+        To like a message, use the /topic/{topicId}/messages/{messageId}/like method.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to undislike the message for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to undislike
+          #TODO:        - access_token, key
+      responses:
+        '200':
+          description: Message undisliked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Message not found
+  /topics/{topicId}/messages/{messageId}/comments:
+    get:
+      summary: Gets the comments to a message identified by the messageId.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to get comments for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to get comments for
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: The page number
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: The number of items per page
+      responses:
+        '200':
+          description: A list of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommentResponse'
+        '404':
+          description: Message not found
+    post:
+      summary: Creates a new comment to a given message.
+      description: Use an access_token with write_access to create a new comment.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to create a comment for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to create a comment for
+      #TODO:        - access_token, key, preview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+        '400':
+          description: Bad request
+  /topics/{topicId}/messages/{messageId}/comments/{commentId}:
+    get:
+      summary: Gets a comment by ID.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to get the comment for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to get the comment for
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the comment to get
+      responses:
+        '200':
+          description: A comment object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+        '404':
+          description: Comment not found
+    put:
+      summary: Edits an existing comment.
+      description: Use an access_token with write_access to edit a comment.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to update the comment for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to update the comment for
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the comment to update
+      #TODO:        - access_token, key, preview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+        '404':
+          description: Comment not found
+    delete:
+      summary: Deletes a comment.
+      description: |-
+        Note that only comment owners can delete their comments. 
+        Use an access_token with write_access to delete a comment.
+        It is not possible to undelete a comment via the API.
+        This method will never return an object.
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the topic to delete the comment for
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the message to delete the comment for
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the comment to delete
+        #TODO:        - access_token, key, preview
+      responses:
+        '204':
+          description: No content
+        '404':
+          description: Comment not found
+components:
+  schemas:
+    ShallowUser:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        user_type:
+          type: string
+        display_name:
+          type: string
+        reputation:
+          type: integer
+        profile_image:
+          type: string
+        link:
+          type: string
+    TopicResponse:
+      type: object
+      properties:
+        topicId:
+          type: integer
+        title:
+          type: string
+          example: "An example topic title"
+        body:
+          type: string
+          example: "An example topic body"
+        link:
+          type: string
+        lastEditDate:
+          type: string
+          format: date-time
+          example: "2020-01-01T00:00:00Z"
+        creationDate:
+          type: string
+          format: date-time
+          example: "2020-01-01T00:00:00Z"
+        closedDate:
+          type: string
+          format: date-time
+          example: "2020-01-01T00:00:00Z"
+        answerCount:
+          type: integer
+          example: 3
+        likeCount:
+          type: integer
+          example: 5
+        dislikeCount:
+          type: integer
+          example: 1
+        viewCount:
+          type: integer
+          example: 100
+        isAnswered:
+          type: boolean
+          example: true
+        closedReason:
+          type: string
+          example: "duplicate"
+        score:
+          type: integer
+          example: 4
+        owner:
+          $ref: '#/components/schemas/ShallowUser'
+        tags:
+          type: array
+          items:
+            type: string
+          example: [ "java", "spring", "microservices" ]
+    TopicCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "An example topic title"
+        body:
+          type: string
+          example: "An example topic body"
+        tags:
+          type: array
+          items:
+            type: string
+    MessageResponse:
+      type: object
+      properties:
+        messageId:
+          type: integer
+        title:
+          type: string
+          example: "An example message title"
+        body:
+          type: string
+          example: "An example message body"
+        link:
+          type: string
+        topicId:
+          type: integer
+        creationDate:
+          type: integer
+        lastEditDate:
+          type: integer
+        score:
+          type: integer
+        likeCount:
+          type: integer
+        dislikeCount:
+          type: integer
+        owner:
+          $ref: '#/components/schemas/ShallowUser'
+    MessageCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "An example message title"
+        body:
+          type: string
+          example: "An example message body"
+    CommentResponse:
+        type: object
+        properties:
+          commentId:
+           type: integer
+          body:
+            type: string
+            example: "An example comment body"
+          link:
+            type: string
+          messageId:
+            type: integer
+          topicId:
+            type: integer
+          creationDate:
+            type: integer
+          edited:
+            type: boolean
+          score:
+            type: integer
+          likeCount:
+            type: integer
+          dislikeCount:
+            type: integer
+          owner:
+            $ref: '#/components/schemas/ShallowUser'
+          replyToUser:
+            $ref: '#/components/schemas/ShallowUser'
+    CommentCreate:
+      type: object
+      properties:
+        body:
+          type: string
+          example: "An example comment body"
